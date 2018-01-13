@@ -10,11 +10,9 @@ namespace Translator
     {
         static void Main(string[] args)
         {
-            string keyValueRule = @"(?<=(?<k>[\w_]+\.\d+\.[td]:0)\s+"")(?<v>.+)(?="")";
 
             string fileNamePattern = GetNamedParameter(args, "--fileNamePattern");// ".+?_l_{0}.yml";
 
-            string apiToken = GetNamedParameter(args, "--apiToken");
 
             string source = GetNamedParameter(args, "--source");
             var parts = source.Split(':');
@@ -33,7 +31,20 @@ namespace Translator
 
 
             string sourceFilePath = string.Format(fileNamePattern, sourceFileName);
-            Regex reg = new Regex(keyValueRule);
+            string targetFilePath = string.Format(fileNamePattern, targetFileName);
+
+            Translate(args, sourceFilePath, sourceLanguage, targetLanguage, targetFilePath);
+
+            //Console.ReadKey();
+
+        }
+
+        private static void Translate(string[] args, string sourceFilePath, string sourceLanguage, string targetLanguage, string targetFilePath)
+        {
+
+            string keyValuePattern = GetNamedParameter(args, "--keyValuePattern");
+            string apiToken = GetNamedParameter(args, "--apiToken");
+            Regex reg = new Regex(keyValuePattern);
 
             var content = File.ReadAllText(sourceFilePath);
 
@@ -66,8 +77,10 @@ namespace Translator
             //Console.WriteLine();
             Console.WriteLine(translatedContent);
 
-            //Console.ReadKey();
-
+            using (StreamWriter sw = new StreamWriter(targetFilePath))
+            {
+                sw.Write(translatedContent);
+            }
         }
 
         static string GetNamedParameter(string[] args, string name, string shortName = null)
