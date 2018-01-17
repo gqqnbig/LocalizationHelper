@@ -1,0 +1,15 @@
+version: 1.0.{build}
+image: Visual Studio 2017
+before_build:
+- cmd: nuget restore Translator.csproj
+build:
+  verbosity: minimal
+deploy:
+- provider: GitHub
+  auth_token:
+    secure: zbtoh4Gg7JoD7zFiEbv4txr4rjfCawpmeRJ/FfxO7u9VjZpLzh6T392ze8TEwaMV
+skip_commits:
+  files:
+    - README.*
+    - .gitattributes
+    - .gitignore
