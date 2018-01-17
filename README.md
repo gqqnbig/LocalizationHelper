@@ -1,5 +1,7 @@
 # LocalizationHelper
 
+[![Build status](https://ci.appveyor.com/api/projects/status/9quhnn68u9ao408p?svg=true)](https://ci.appveyor.com/project/gqqnbig/localizationhelper)
+
 ## Command Line Options
 
 ### keyValuePattern
