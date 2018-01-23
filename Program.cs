@@ -31,6 +31,8 @@ namespace Translator
 
 
             string sourceFilePath = string.Format(fileNamePattern, sourceFileName);
+			if (sourceFilePath == fileNamePattern)
+				throw new ArgumentException($"Parameter fileNamePattern doesn't have format placeholders.\nfileNamePattern={fileNamePattern}");
             string targetFilePath = string.Format(fileNamePattern, targetFileName);
 
             TranslateFile(args, sourceFilePath, sourceLanguage, targetLanguage, targetFilePath);
@@ -89,7 +91,7 @@ namespace Translator
                       return TranslateText(args, sourceLanguage, targetLanguage, match.Value);
               });
 
-            Console.WriteLine(translatedContent);
+            //Console.WriteLine(translatedContent);
 
             using (StreamWriter sw = new StreamWriter(targetFilePath))
             {
@@ -104,6 +106,9 @@ namespace Translator
                 WebClient client = new WebClient();
 
                 string apiToken = GetNamedParameter(args, "--apiToken");
+				if (apiToken == null)
+					throw new ArgumentNullException("apiToken");
+
                 var url = $"https://translation.googleapis.com/language/translate/v2/?q={text}&source={sourceLanguage}&target={targetLanguage}&key={apiToken}";
 
 
