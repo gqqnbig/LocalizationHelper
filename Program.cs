@@ -41,6 +41,8 @@ namespace Translator
 
         private static void TranslateFile(string[] args, string sourceFilePath, string sourceLanguage, string targetLanguage, string targetFilePath)
         {
+			if (sourceFilePath == targetFilePath)
+				throw new ArgumentException($"source file path is the same as target file path. File path is {sourceFilePath}");
 
             string keyValuePattern = GetNamedParameter(args, "--keyValuePattern");
             string keyPattern = GetNamedParameter(args, "--keyPattern");
