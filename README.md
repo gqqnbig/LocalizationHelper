@@ -11,8 +11,6 @@ A typical `keyValuePattern` has _Zero-width positive lookahead assertion_ and _Z
 
 ### keyPattern
 
-### fileNamePattern
-
 ### source
 Take form of `a:b`. `b` is the language code, `a` is a component of file name. For instance, if the options are 
 

@@ -3,6 +3,7 @@ using System.IO;
 using System.Net;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json.Linq;
+using System.Linq;
 
 namespace Translator
 {
@@ -10,9 +11,6 @@ namespace Translator
     {
         static void Main(string[] args)
         {
-
-            string fileNamePattern = GetNamedParameter(args, "--fileNamePattern");
-
 
             string source = GetNamedParameter(args, "--source");
             var parts = source.Split(':');
@@ -31,12 +29,8 @@ namespace Translator
 			if (sourceLanguage == targetLanguage)
 				throw new ArgumentException("Source language is the same as target language.");
 
-            string sourceFilePath = string.Format(fileNamePattern, sourceFileName);
-			if (sourceFilePath == fileNamePattern)
-				throw new ArgumentException($"Parameter fileNamePattern doesn't have format placeholders.\nfileNamePattern={fileNamePattern}");
-            string targetFilePath = string.Format(fileNamePattern, targetFileName);
 
-            TranslateFile(args, sourceFilePath, sourceLanguage, targetFilePath, targetLanguage);
+			TranslateFile(args, sourceFileName, sourceLanguage, targetFileName, targetLanguage);
 
             //Console.ReadKey();
 
@@ -48,8 +42,9 @@ namespace Translator
 				throw new ArgumentException($"source file path is the same as target file path. File path is {sourceFilePath}");
 
             string keyValuePattern = GetNamedParameter(args, "--keyValuePattern");
-            string keyPattern = GetNamedParameter(args, "--keyPattern");
-			Regex reg = new Regex(string.Format(keyValuePattern, keyPattern), RegexOptions.Multiline);
+			string keyPattern = GetOptionalNamedOptionArgument(args, "--keyPattern", null);
+
+			Regex reg = new Regex(keyPattern!=null? string.Format(keyValuePattern, keyPattern): keyValuePattern, RegexOptions.Multiline);
 
             var content = File.ReadAllText(sourceFilePath);
 
@@ -177,5 +172,23 @@ namespace Translator
 
             return args[p + 1];
         }
-    }
+
+		private static string GetOptionalNamedOptionArgument(string[] args, string option, string defaultValue)
+		{
+			int p = Array.IndexOf(args, option);
+			if (p == -1)
+			{
+				return null;
+			}
+			else
+			{
+				if (p + 1 == args.Length)
+					return defaultValue;
+				else if (args[p + 1].StartsWith("-"))
+					return defaultValue;
+				else
+					return args[p + 1];
+			}
+		}
+	}
 }
