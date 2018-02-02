@@ -7,6 +7,8 @@
 ### keyValuePattern
 Must have `{0}` placeholder, which is used to insert `keyPattern`. This pattern is executed with [RegexOptions.Multiline](https://msdn.microsoft.com/library/system.text.regularexpressions.regexoptions(v=vs.110).aspx).
 
+A typical `keyValuePattern` has _Zero-width positive lookahead assertion_ and _Zero-width positive lookbehind assertion_. For instance `  --keyValuePattern "(?<=;\s*)(.+)(?=\s*$)"` matches the comments in AutoHotKey source code, while the two assertions avoid `;` and `$` being fed into Google Translator.
+
 ### keyPattern
 
 ### fileNamePattern
