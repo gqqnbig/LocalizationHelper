@@ -28,7 +28,8 @@ namespace Translator
             string targetFileName = parts[0];
             string targetLanguage = parts[1];
 
-
+			if (sourceLanguage == targetLanguage)
+				throw new ArgumentException("Source language is the same as target language.");
 
             string sourceFilePath = string.Format(fileNamePattern, sourceFileName);
 			if (sourceFilePath == fileNamePattern)
