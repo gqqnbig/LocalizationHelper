@@ -35,13 +35,13 @@ namespace Translator
 				throw new ArgumentException($"Parameter fileNamePattern doesn't have format placeholders.\nfileNamePattern={fileNamePattern}");
             string targetFilePath = string.Format(fileNamePattern, targetFileName);
 
-            TranslateFile(args, sourceFilePath, sourceLanguage, targetLanguage, targetFilePath);
+            TranslateFile(args, sourceFilePath, sourceLanguage, targetFilePath, targetLanguage);
 
             //Console.ReadKey();
 
         }
 
-        private static void TranslateFile(string[] args, string sourceFilePath, string sourceLanguage, string targetLanguage, string targetFilePath)
+        private static void TranslateFile(string[] args, string sourceFilePath, string sourceLanguage, string targetFilePath, string targetLanguage)
         {
 			if (sourceFilePath == targetFilePath)
 				throw new ArgumentException($"source file path is the same as target file path. File path is {sourceFilePath}");
