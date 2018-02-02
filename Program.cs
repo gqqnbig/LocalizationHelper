@@ -109,7 +109,7 @@ namespace Translator
 				if (apiToken == null)
 					throw new ArgumentNullException("apiToken");
 
-                var url = $"https://translation.googleapis.com/language/translate/v2/?q={text}&source={sourceLanguage}&target={targetLanguage}&key={apiToken}";
+				var url = $"https://translation.googleapis.com/language/translate/v2/?q={Uri.EscapeDataString(text)}&source={sourceLanguage}&target={targetLanguage}&key={apiToken}";
 
 
                 var json = JObject.Parse(client.DownloadString(url));
