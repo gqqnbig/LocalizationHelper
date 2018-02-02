@@ -48,7 +48,7 @@ namespace Translator
 
             string keyValuePattern = GetNamedParameter(args, "--keyValuePattern");
             string keyPattern = GetNamedParameter(args, "--keyPattern");
-            Regex reg = new Regex(string.Format(keyValuePattern, keyPattern));
+			Regex reg = new Regex(string.Format(keyValuePattern, keyPattern), RegexOptions.Multiline);
 
             var content = File.ReadAllText(sourceFilePath);
 

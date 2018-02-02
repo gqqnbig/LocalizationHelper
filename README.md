@@ -5,7 +5,7 @@
 ## Command Line Options
 
 ### keyValuePattern
-Must have `{0}` placeholder, which is used to insert `keyPattern`.
+Must have `{0}` placeholder, which is used to insert `keyPattern`. This pattern is executed with [RegexOptions.Multiline](https://msdn.microsoft.com/library/system.text.regularexpressions.regexoptions(v=vs.110).aspx).
 
 ### keyPattern
 
