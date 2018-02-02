@@ -54,7 +54,7 @@ namespace Translator
 
 
             var diffContent = GetDiffContent(args);
-            var targetContent = File.ReadAllText(targetFilePath);
+			var targetContent = File.Exists(targetFilePath) ? File.ReadAllText(targetFilePath) : null;
 
 
             var translatedContent = reg.Replace(content, match =>
