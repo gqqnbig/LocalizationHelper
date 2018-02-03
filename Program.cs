@@ -43,13 +43,14 @@ namespace Translator
 
             string keyValuePattern = GetNamedParameter(args, "--keyValuePattern");
 			string keyPattern = GetOptionalNamedOptionArgument(args, "--keyPattern", null);
+			bool isKeylessPattern = keyPattern == null;
 
-			Regex reg = new Regex(keyPattern!=null? string.Format(keyValuePattern, keyPattern): keyValuePattern, RegexOptions.Multiline);
+			Regex reg = new Regex(isKeylessPattern ? keyValuePattern : string.Format(keyValuePattern, keyPattern), RegexOptions.Multiline);
 
             var content = File.ReadAllText(sourceFilePath);
 
 
-            var diffContent = GetDiffContent(args);
+			var diffContent = GetDiffContent(args, isKeylessPattern == false);
 			var targetContent = File.Exists(targetFilePath) ? File.ReadAllText(targetFilePath) : null;
 
 
@@ -61,8 +62,83 @@ namespace Translator
 
                   if (diffContent != null)
                   {
-                      if (diffContent.Contains(key))
+                      if (diffContent.Contains(isKeylessPattern ? match.Value : key))
                           return TranslateText(args, sourceLanguage, targetLanguage, match.Value);
+                      else if (isKeylessPattern) //Not in diff. I can use the translated verbiage.
+                      {
+                          var line = content.GetLineFromIndex(match.Index, out int currentLineIndex);
+
+
+
+                          Func<string> f1 = () =>
+                          {
+                              var key1 = GetInlineKey(reg, line);
+                              var keyIndex = GetUniqueKeyInTarget(targetContent, key1);
+                              if (keyIndex == -1)
+                                  return null;
+
+                              //Use the value on the same line as the key.
+                              var l = targetContent.GetLineFromIndex(keyIndex, out _);
+                              var m = reg.Match(l);
+                              if (m.Success)
+                                  return m.Value;
+                              else
+                              {
+                                  //Key is found, but the line doesn't match KeyValuePattern.
+                                  Console.Error.WriteLine($"Key \"{key1}\" doesn't exist in diff nor in translated file. I guess this verbiage doesn't need to exist.");
+                                  return string.Empty;
+                              }
+                              
+                          };
+                          Func<string> f2 = () =>
+                          {
+                              var key1 = GetInlineKey(reg, content.GetLineFromIndex(currentLineIndex + line.Length, out _));
+                              var keyIndex = GetUniqueKeyInTarget(targetContent, key1);
+                              if (keyIndex == -1)
+                                  return null;
+
+                              //Because I retrieve the key on next line, I have to get value from its previous line.
+                              targetContent.GetLineFromIndex(keyIndex, out int p);
+                              var l = targetContent.GetLineFromIndex(p - 1, out _);
+                              var m = reg.Match(l);
+                              if (m.Success)
+                                  return m.Value;
+                              else
+                              {
+                                  //Key is found, but the line doesn't match KeyValuePattern.
+                                  Console.Error.WriteLine($"Key \"{key1}\" doesn't exist in diff nor in translated file. I guess this verbiage doesn't need to exist.");
+                                  return string.Empty;
+                              }
+                          };
+
+
+                          Func<string> f3 = () =>
+                          {
+                              var key1 = GetInlineKey(reg, content.GetLineFromIndex(currentLineIndex - 1, out _));
+                              var keyIndex = GetUniqueKeyInTarget(targetContent, key1);
+                              if (keyIndex == -1)
+                                  return null;
+
+
+                              //Because I retrieve the key on previous line, I have to get value from its next line.
+                              var l0 = targetContent.GetLineFromIndex(keyIndex, out int p);
+                              var l = targetContent.GetLineFromIndex(p + l0.Length, out _);
+                              var m = reg.Match(l);
+                              if (m.Success)
+                                  return m.Value;
+                              else
+                              {
+                                  //Key is found, but the line doesn't match KeyValuePattern.
+                                  Console.Error.WriteLine($"Key \"{key1}\" doesn't exist in diff nor in translated file. I guess this verbiage doesn't need to exist.");
+                                  return string.Empty;
+                              }
+                          };
+
+                          var translation = new[] { f1, f2, f3 }.Select(f => f()).FirstOrDefault(s => s != null);
+                          if (translation != null)
+                              return translation;
+                          return TranslateText(args, sourceLanguage, targetLanguage, match.Value);
+                      }
                       else
                       {
                           string needle = string.Format(keyValuePattern, key);
@@ -76,9 +152,9 @@ namespace Translator
                           else
                           {
                               Console.Error.WriteLine($"Key \"{key}\" doesn't exist in diff nor in translated file \"{targetFilePath}\". " +
-                                                       "The translated file may be manually modified, the program will translate the value of the key.");
+                                                      "I guess you don't want the verbiage translated.");
 
-                              return TranslateText(args, sourceLanguage, targetLanguage, match.Value);
+                              return string.Empty;
                           }
                       }
 
@@ -93,6 +169,45 @@ namespace Translator
             {
                 sw.Write(translatedContent);
             }
+        }
+
+        private static int GetUniqueKeyInTarget(string targetContent, string key)
+        {
+            if (key.Trim().Length <= 2) //Ignore very short keys
+                return -1;
+            else
+            {
+                var r1 = new Regex("^" + Regex.Escape(key) + ".*", RegexOptions.Multiline);
+                var targetMatch = r1.Match(targetContent);
+                if (targetMatch.Success == false)
+                {
+                    Console.Error.WriteLine(
+                        $"Key \"{key}\" doesn't exist in diff nor in translated file. I guess this part in target file has been revised.");
+
+                    return -1;
+                }
+                else if (targetMatch.Index + 1 < targetContent.Length && r1.Match(targetContent, targetMatch.Index + 1).Success)
+                {
+                    //Key is not unique. Have to translate.
+                    return -1;
+                }
+                else
+                {
+                    return targetMatch.Index;
+                }
+            }
+        }
+
+
+        private static string GetInlineKey(Regex reg, string line)
+        {
+            var m = reg.Match(line);
+            string key1;
+            if (m.Success)
+                key1 = line.Substring(0, m.Index);
+            else
+                key1 = line;
+            return key1;
         }
 
         private static string TranslateText(string[] args, string sourceLanguage, string targetLanguage, string text)
@@ -121,7 +236,7 @@ namespace Translator
             }
         }
 
-        private static string GetDiffContent(string[] args)
+		private static string GetDiffContent(string[] args, bool stripRemovedLines)
         {
             string diffPath = GetNamedParameter(args, "--diff");
 			System.Text.StringBuilder stringBuilder = new System.Text.StringBuilder();
@@ -144,6 +259,9 @@ namespace Translator
 				sr.ReadLine();
 				sr.ReadLine();
 				sr.ReadLine();
+
+				if (stripRemovedLines == false)
+					return sr.ReadToEnd();
 
 				string l;
 				while ((l = sr.ReadLine()) != null)
