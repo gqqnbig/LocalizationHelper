@@ -129,38 +129,36 @@ namespace Translator
         private static string GetDiffContent(string[] args)
         {
             string diffPath = GetNamedParameter(args, "--diff");
-            string diffContent = null;
+			System.Text.StringBuilder stringBuilder = new System.Text.StringBuilder();
+			StreamReader sr = null;
             if (diffPath == null)
             {
                 if (Console.IsInputRedirected)
-                {
-                    using (StreamReader sr = new StreamReader(Console.OpenStandardInput()))
-                    {
-                        //Ignore first 4 lines.
-                        sr.ReadLine();
-                        sr.ReadLine();
-                        sr.ReadLine();
-                        sr.ReadLine();
+					sr = new StreamReader(Console.OpenStandardInput());
+			}
+			else
+				sr = new StreamReader(diffPath);
 
-                        diffContent = sr.ReadToEnd();
-                    }
-                }
-            }
-            else
-            {
-                using (StreamReader sr = new StreamReader(diffPath))
-                {
-                    //Ignore first 4 lines.
-                    sr.ReadLine();
-                    sr.ReadLine();
-                    sr.ReadLine();
-                    sr.ReadLine();
+			if (sr == null)
+				return null;
 
-                    diffContent = sr.ReadToEnd();
-                }
-            }
+			using (sr)
+			{
+				//Ignore first 4 lines.
+				sr.ReadLine();
+				sr.ReadLine();
+				sr.ReadLine();
+				sr.ReadLine();
 
-            return diffContent;
+				string l;
+				while ((l = sr.ReadLine()) != null)
+				{
+					if (l[0] != '-')
+						stringBuilder.AppendLine(l);
+				}
+			}
+
+			return stringBuilder.ToString();
         }
 
         static string GetNamedParameter(string[] args, string name, string shortName = null)
