@@ -68,73 +68,8 @@ namespace Translator
                       {
                           var line = content.GetLineFromIndex(match.Index, out int currentLineIndex);
 
-
-
-                          Func<string> f1 = () =>
-                          {
-                              var key1 = GetInlineKey(reg, line);
-                              var keyIndex = GetUniqueKeyInTarget(targetContent, key1);
-                              if (keyIndex == -1)
-                                  return null;
-
-                              //Use the value on the same line as the key.
-                              var l = targetContent.GetLineFromIndex(keyIndex, out _);
-                              var m = reg.Match(l);
-                              if (m.Success)
-                                  return m.Value;
-                              else
-                              {
-                                  //Key is found, but the line doesn't match KeyValuePattern.
-                                  Console.Error.WriteLine($"Key \"{key1}\" doesn't exist in diff nor in translated file. I guess this verbiage doesn't need to exist.");
-                                  return string.Empty;
-                              }
-                              
-                          };
-                          Func<string> f2 = () =>
-                          {
-                              var key1 = GetInlineKey(reg, content.GetLineFromIndex(currentLineIndex + line.Length, out _));
-                              var keyIndex = GetUniqueKeyInTarget(targetContent, key1);
-                              if (keyIndex == -1)
-                                  return null;
-
-                              //Because I retrieve the key on next line, I have to get value from its previous line.
-                              targetContent.GetLineFromIndex(keyIndex, out int p);
-                              var l = targetContent.GetLineFromIndex(p - 1, out _);
-                              var m = reg.Match(l);
-                              if (m.Success)
-                                  return m.Value;
-                              else
-                              {
-                                  //Key is found, but the line doesn't match KeyValuePattern.
-                                  Console.Error.WriteLine($"Key \"{key1}\" doesn't exist in diff nor in translated file. I guess this verbiage doesn't need to exist.");
-                                  return string.Empty;
-                              }
-                          };
-
-
-                          Func<string> f3 = () =>
-                          {
-                              var key1 = GetInlineKey(reg, content.GetLineFromIndex(currentLineIndex - 1, out _));
-                              var keyIndex = GetUniqueKeyInTarget(targetContent, key1);
-                              if (keyIndex == -1)
-                                  return null;
-
-
-                              //Because I retrieve the key on previous line, I have to get value from its next line.
-                              var l0 = targetContent.GetLineFromIndex(keyIndex, out int p);
-                              var l = targetContent.GetLineFromIndex(p + l0.Length, out _);
-                              var m = reg.Match(l);
-                              if (m.Success)
-                                  return m.Value;
-                              else
-                              {
-                                  //Key is found, but the line doesn't match KeyValuePattern.
-                                  Console.Error.WriteLine($"Key \"{key1}\" doesn't exist in diff nor in translated file. I guess this verbiage doesn't need to exist.");
-                                  return string.Empty;
-                              }
-                          };
-
-                          var translation = new[] { f1, f2, f3 }.Select(f => f()).FirstOrDefault(s => s != null);
+                          var translation = new Func<Regex, string, string, int, string, string>[] { KeylessTranslationProvider, KeylessTranslationLookaheadProvider, KeylessTranslationLookbehindProvider }
+                                            .Select(f => f(reg, content, targetContent, currentLineIndex, line)).FirstOrDefault(s => s != null);
                           if (translation != null)
                               return translation;
                           return TranslateText(args, sourceLanguage, targetLanguage, match.Value);
@@ -308,5 +243,69 @@ namespace Translator
 					return args[p + 1];
 			}
 		}
+
+        static string KeylessTranslationProvider(Regex reg, string content, string targetContent, int sourceLineIndex, string sourceLine)
+        {
+            var key1 = GetInlineKey(reg, sourceLine);
+            var keyIndex = GetUniqueKeyInTarget(targetContent, key1);
+            if (keyIndex == -1)
+                return null;
+
+            //Use the value on the same line as the key.
+            var l = targetContent.GetLineFromIndex(keyIndex, out _);
+            var m = reg.Match(l);
+            if (m.Success)
+                return m.Value;
+            else
+            {
+                //Key is found, but the line doesn't match KeyValuePattern.
+                Console.Error.WriteLine($"Key \"{key1}\" doesn't exist in diff nor in translated file. I guess this verbiage doesn't need to exist.");
+                return string.Empty;
+            }
+
+        }
+
+        static string KeylessTranslationLookaheadProvider(Regex reg, string content, string targetContent, int sourceLineIndex, string sourceLine)
+        {
+            var key1 = GetInlineKey(reg, content.GetLineFromIndex(sourceLineIndex + sourceLine.Length, out _));
+            var keyIndex = GetUniqueKeyInTarget(targetContent, key1);
+            if (keyIndex == -1)
+                return null;
+
+            //Because I retrieve the key on next line, I have to get value from its previous line.
+            targetContent.GetLineFromIndex(keyIndex, out int p);
+            var l = targetContent.GetLineFromIndex(p - 1, out _);
+            var m = reg.Match(l);
+            if (m.Success)
+                return m.Value;
+            else
+            {
+                //Key is found, but the line doesn't match KeyValuePattern.
+                Console.Error.WriteLine($"Key \"{key1}\" doesn't exist in diff nor in translated file. I guess this verbiage doesn't need to exist.");
+                return string.Empty;
+            }
+        }
+
+        static string KeylessTranslationLookbehindProvider(Regex reg, string content, string targetContent, int sourceLineIndex, string sourceLine)
+        {
+            var key1 = GetInlineKey(reg, content.GetLineFromIndex(sourceLineIndex - 1, out _));
+            var keyIndex = GetUniqueKeyInTarget(targetContent, key1);
+            if (keyIndex == -1)
+                return null;
+
+
+            //Because I retrieve the key on previous line, I have to get value from its next line.
+            var l0 = targetContent.GetLineFromIndex(keyIndex, out int p);
+            var l = targetContent.GetLineFromIndex(p + l0.Length, out _);
+            var m = reg.Match(l);
+            if (m.Success)
+                return m.Value;
+            else
+            {
+                //Key is found, but the line doesn't match KeyValuePattern.
+                Console.Error.WriteLine($"Key \"{key1}\" doesn't exist in diff nor in translated file. I guess this verbiage doesn't need to exist.");
+                return string.Empty;
+            }
+        }
 	}
 }
