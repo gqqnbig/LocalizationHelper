@@ -7,6 +7,7 @@ clone_depth: 5
 before_build:
 - cmd: nuget restore -PackagesDirectory packages
 build:
+  project: Translator.sln
   verbosity: minimal
 deploy:
 - provider: GitHub
