@@ -4,12 +4,14 @@
 
 ## Command Line Options
 
-### keyValuePattern
-Must have `{0}` placeholder, which is used to insert `keyPattern`. This pattern is executed with [RegexOptions.Multiline](https://msdn.microsoft.com/library/system.text.regularexpressions.regexoptions(v=vs.110).aspx).
-
-A typical `keyValuePattern` has _Zero-width positive lookahead assertion_ and _Zero-width positive lookbehind assertion_. For instance `  --keyValuePattern "(?<=;\s*)(.+)(?=\s*$)"` matches the comments in AutoHotKey source code, while the two assertions avoid `;` and `$` being fed into Google Translator.
-
 ### keyPattern
+It's optional. It specifies the pattern of key in [.NET regular expression](https://docs.microsoft.com/dotnet/standard/base-types/regular-expression-language-quick-reference). This option is used when the text in source files are in key value pairs.
+
+### keyValuePattern
+If `keyPattern` is specified, this option must have `{0}` placeholder, which is used to insert `keyPattern`. This pattern is executed with [RegexOptions.Multiline](https://msdn.microsoft.com/library/system.text.regularexpressions.regexoptions(v=vs.110).aspx).
+
+A typical `keyValuePattern` has _Zero-width positive lookahead assertion_ and _Zero-width positive lookbehind assertion_. For instance `  --keyValuePattern "(?<=;[\s-[\r\n]]*)[^\r\n]+"` matches the comments in AutoHotKey source code, while the two assertions avoid `;` and `$` being fed into Google Translator.
+
 
 ### source
 Take form of `a:b`. `b` is the language code, `a` is a component of file name. For instance, if the options are 
