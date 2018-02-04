@@ -3,16 +3,21 @@ branches:
   only:
   - master
 image: Visual Studio 2017
+configuration: Release
 clone_depth: 5
 before_build:
 - cmd: nuget restore -PackagesDirectory packages
 build:
   project: Translator.sln
   verbosity: minimal
+artifacts:
+- path: bin\Release
+  name: LocalizationHelper # this is file name, generate LocalizationHelper.zip
 deploy:
 - provider: GitHub
   auth_token:
     secure: zbtoh4Gg7JoD7zFiEbv4txr4rjfCawpmeRJ/FfxO7u9VjZpLzh6T392ze8TEwaMV
+  artifact: LocalizationHelper
   prerelease: true
 skip_commits:
   files:
