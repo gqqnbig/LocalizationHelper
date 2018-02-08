@@ -222,7 +222,7 @@ namespace Translator
 
 				var url = $"https://translation.googleapis.com/language/translate/v2/?q={Uri.EscapeDataString(text)}&source={sourceLanguage}&target={targetLanguage}&key={apiToken}";
 
-
+				client.Encoding = System.Text.Encoding.UTF8;
                 var json = JObject.Parse(client.DownloadString(url));
 
                 var translatedText = json["data"]["translations"][0]["translatedText"];
