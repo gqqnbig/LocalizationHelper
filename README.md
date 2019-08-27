@@ -82,7 +82,7 @@ Foreach( $modifiedResource in $modifiedResources)
 ```
 This script translates comments in 鼠标配合-工作.ahk in Chinese to English and write to work.en.ahk.
 
-### Localize Hearts of Icon localisation files
+### Localize Hearts of Iron localisation files
 ```PowerShell
 cd $args[2]
  
